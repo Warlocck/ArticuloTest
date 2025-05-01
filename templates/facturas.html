@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Lista de Facturas</h2>
+    <a href="{{ url_for('nueva_factura') }}" class="btn">Nueva Factura</a>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for factura in facturas %}
+            <tr>
+                <td>{{ factura[1] }}</td>
+                <td>{{ factura[2] }}</td>   
+                <td>{{ factura[3] }}</td>
+                <td>S/.{{ "%.2f"|format(factura[4]) }}</td>
+                <td>
+                    <a href="{{ url_for('ver_factura', id=factura[0]) }}" class="btn">Ver</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

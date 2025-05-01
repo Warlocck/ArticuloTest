@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Facturación</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Sistema de Facturación</h1>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('listar_facturas') }}">Facturas</a></li>
+                <li><a href="{{ url_for('nueva_factura') }}">Nueva Factura</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        <p>Sistema de Facturación &copy; 2023</p>
+    </footer>
+</body>
+</html>
