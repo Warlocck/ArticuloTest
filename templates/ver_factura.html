@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Factura #{{ factura[1] }}</h2>
+
+<div class="factura-header">
+    <div>
+        <p><strong>Fecha:</strong> {{ factura[2] }}</p>
+        <p><strong>Cliente:</strong> {{ factura[5] }}</p>
+        <p><strong>Dirección:</strong> {{ factura[6] }}</p>
+        <p><strong>Teléfono:</strong> {{ factura[7] }}</p>
+    </div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Producto</th>
+            <th>Cantidad</th>
+            <th>Precio Unitario</th>
+            <th>Subtotal</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in items %}
+        <tr>
+            <td>{{ item[1] }}</td>
+            <td>{{ item[2] }}</td>
+            <td>S/.{{ "%.2f"|format(item[3]) }}</td>
+            <td>S/.{{ "%.2f"|format(item[4]) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    <tfoot>
+        <tr>
+            <td colspan="3" class="total-label">Total:</td>
+            <td class="total">S/.{{ "%.2f"|format(factura[3]) }}</td>
+        </tr>
+    </tfoot>
+</table>
+
+<a href="{{ url_for('listar_facturas') }}" class="btn">Volver</a>
+<a href="{{ url_for('exportar_factura_pdf', id=factura[0]) }}" class="btn">Exportar PDF</a>
+{% endblock %}
+

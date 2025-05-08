@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Nueva Factura</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="cliente_id">Cliente:</label>
+            <select name="cliente_id" id="cliente_id" required>
+                <option value="">Seleccione un cliente</option>
+                {% for cliente in clientes %}
+                <option value="{{ cliente[0] }}">{{ cliente[1] }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <h3>Items de Factura</h3>
+        <table id="items-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(1, 6) %}
+                <tr>
+                    <td>
+                        <select name="producto_id_{{ i }}" id="producto_id_{{ i }}" class="producto-select">
+                            <option value="">Seleccione un producto</option>
+                            {% for producto in productos %}
+                            <option value="{{ producto[0] }}" data-precio="{{ producto[2] }}">{{ producto[1] }} (S/.{{ "%.2f"|format(producto[2]) }})</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                    <td><input type="number" name="cantidad_{{ i }}" id="cantidad_{{ i }}" min="1" class="cantidad-input"></td>
+                    <td><span id="precio_{{ i }}" class="precio">0.00</span></td>
+                    <td><span id="subtotal_{{ i }}" class="subtotal">0.00</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <div class="form-group">
+            <label>Total:</label>
+            <span id="total">0.00</span>
+        </div>
+        
+        <button type="submit" class="btn">Guardar Factura</button>
+    </form>
+    
+    <script>
+        document.querySelectorAll('.producto-select').forEach(select => {
+            select.addEventListener('change', function() {
+                const precio = this.options[this.selectedIndex]?.dataset.precio || '0';
+                const rowId = this.id.split('_')[2];
+                document.getElementById(`precio_${rowId}`).textContent = parseFloat(precio).toFixed(2);
+                calcularSubtotal(rowId);
+            });
+        });
+        
+        document.querySelectorAll('.cantidad-input').forEach(input => {
+            input.addEventListener('input', function() {
+                const rowId = this.id.split('_')[1];
+                calcularSubtotal(rowId);
+            });
+        });
+        
+        function calcularSubtotal(rowId) {
+            const cantidad = parseFloat(document.getElementById(`cantidad_${rowId}`).value) || 0;
+            const precio = parseFloat(document.getElementById(`precio_${rowId}`).textContent) || 0;
+            const subtotal = cantidad * precio;
+            document.getElementById(`subtotal_${rowId}`).textContent = subtotal.toFixed(2);
+            calcularTotal();
+        }
+        
+        function calcularTotal() {
+            let total = 0;
+            document.querySelectorAll('.subtotal').forEach(el => {
+                total += parseFloat(el.textContent) || 0;
+            });
+            document.getElementById('total').textContent = total.toFixed(2);
+        }
+    </script>
+{% endblock %}

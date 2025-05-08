@@ -11,8 +11,12 @@
         <h1>Sistema de Facturación</h1>
         <nav>
             <ul>
+                {% if session.get('usuario') %}
+                    <li>Username: <strong>{{ session['usuario'] }}</strong></li>
+                {% endif %}
                 <li><a href="{{ url_for('listar_facturas') }}">Facturas</a></li>
                 <li><a href="{{ url_for('nueva_factura') }}">Nueva Factura</a></li>
+                <li><a href="{{ url_for('logout') }}" class="cerrar_sesion">Cerrar sesión</a></li>
             </ul>
         </nav>
     </header>
@@ -20,7 +24,7 @@
         {% block content %}{% endblock %}
     </main>
     <footer>
-        <p>Sistema de Facturación &copy; 2023</p>
+        <p>Sistema de Facturación &copy; 2025</p>
     </footer>
 </body>
 </html>
