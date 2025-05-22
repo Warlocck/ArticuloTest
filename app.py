@@ -82,31 +82,31 @@ def register():
 
         # Validaciones
         if not username:
-            flash("Por favor, ingrese su nombre de usuario", "error")
+            flash("Por favor, ingrese su nombre de usuario (solo letras, números y guiones bajos).", "error")
             return redirect(url_for('register'))
 
         if not email:
-            flash("Por favor, ingrese su correo electrónico", "error")
+            flash("Por favor, ingrese su correo electrónico.", "error")
             return redirect(url_for('register'))
         elif '@' not in email or '.' not in email:
-            flash("Formato de correo inválido", "error")
+            flash("Formato de correo inválido. Debe contener '@' y un dominio válido.", "error")
             return redirect(url_for('register'))
 
         if not password:
-            flash("Por favor, ingrese su contraseña", "error")
+            flash("Por favor, ingrese su contraseña.", "error")
             return redirect(url_for('register'))
         elif len(password) < 8:
-            flash("La contraseña debe tener al menos 8 caracteres", "error")
+            flash("La contraseña debe tener al menos 8 caracteres.", "error")
             return redirect(url_for('register'))
 
         if not key_secret:
-            flash("Por favor, ingrese la clave secreta", "error")
+            flash("Por favor, ingrese la clave secreta del administrador.", "error")
             return redirect(url_for('register'))
 
         # Comparar clave secreta
-        expected_key = os.environ.get("KEY_SECRET_ADMIN")
+        expected_key = os.environ.get("KEY_SECRET_ADMIN", "1234")  # Reemplaza por una clave real
         if key_secret != expected_key:
-            flash("Clave secreta incorrecta", "error")
+            flash("Clave secreta incorrecta.", "error")
             return redirect(url_for('register'))
 
         # Intentar registrar usuario
@@ -122,11 +122,11 @@ def register():
             return redirect(url_for('login'))
         except pg_errors.UniqueViolation:
             conn.rollback()
-            flash('El nombre de usuario o correo ya están registrados', 'error')
+            flash('El nombre de usuario o correo ya están registrados.', 'error')
         except Exception as e:
             conn.rollback()
             print(f"Error al registrar el usuario: {e}")
-            flash('Ocurrió un error al registrar el usuario', 'error')
+            flash('Ocurrió un error al registrar el usuario.', 'error')
         finally:
             cur.close()
             conn.close()
@@ -144,6 +144,8 @@ def logout():
     session.clear()
     flash('Sesión cerrada correctamente.', 'info')
     return redirect(url_for('login'))
+
+
 @app.route('/facturas', methods=['GET', 'POST'])
 def listar_facturas():
     if 'usuario' not in session:
