@@ -1,86 +1,222 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 
 {% block content %}
-<h2>Editar Factura #{{ factura[1] }}</h2>
-<form method="POST">
-    <div class="form-group">
-        <label for="cliente_id">Cliente:</label>
-        <select name="cliente_id" id="cliente_id" required>
-            <option value="">Seleccione un cliente</option>
-            {% for cliente in clientes %}
-            <option value="{{ cliente[0] }}" {% if cliente[0] == factura[4] %}selected{% endif %}>{{ cliente[1] }}</option>
-            {% endfor %}
-        </select>
-    </div>
+<div class="container">
+    <h2 class="my-4">Editar Factura #{{ factura[3] }}</h2>
+    
+    <form method="POST" id="factura-form">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Datos de la Factura</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-group row">
+                    <label for="cliente_id" class="col-sm-3 col-form-label">Cliente:</label>
+                    <div class="col-sm-9">
+                        <select name="cliente_id" id="cliente_id" class="form-control" required>
+                            <option value="">Seleccione un cliente</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente[0] }}" {% if factura[1] == cliente[0] %}selected{% endif %}>
+                                {{ cliente[1] }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <h3>Items de Factura</h3>
-    <table id="items-table">
-        <thead>
-            <tr>
-                <th>Producto</th>
-                <th>Cantidad</th>
-                <th>Precio Unitario</th>
-                <th>Subtotal</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for i in range(1, 6) %}
-            <tr>
-                <td>
-                    <select name="producto_id_{{ i }}" id="producto_id_{{ i }}" class="producto-select">
-                        <option value="">Seleccione un producto</option>
-                        {% for producto in productos %}
-                        <option value="{{ producto[0] }}" {% if productos_seleccionados['producto_id_' ~ i] == producto[0] %}selected{% endif %} data-precio="{{ producto[2] }}">{{ producto[1] }} (S/.{{ "%.2f"|format(producto[2]) }})</option>
-                        {% endfor %}
-                    </select>
-                </td>
-                <td><input type="number" name="cantidad_{{ i }}" id="cantidad_{{ i }}" min="1" class="cantidad-input" value="{{ cantidades_seleccionadas['cantidad_' ~ i] }}"></td>
-                <td><span id="precio_{{ i }}" class="precio">{% if items[i-1] %}{{ "%.2f"|format(items[i-1][3]) }}{% else %}0.00{% endif %}</span></td>
-                <td><span id="subtotal_{{ i }}" class="subtotal">{% if items[i-1] %}{{ "%.2f"|format(items[i-1][4]) }}{% else %}0.00{% endif %}</span></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    
-    <div class="form-group">
-        <label>Total:</label>
-        <span id="total">{{ "%.2f"|format(factura[3]) }}</span>
-    </div>
-    
-    <button type="submit" class="btn">Guardar Factura</button>
-</form>
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Items de Factura</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="items-table" class="table table-hover">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th width="120">Cantidad</th>
+                                <th width="150">Precio Unitario</th>
+                                <th width="150">Subtotal</th>
+                                <th width="50"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in range(1, 6) %}
+                            <tr class="item-row">
+                                <td>
+                                    <select name="producto_id_{{ i }}" id="producto_id_{{ i }}" class="form-control producto-select">
+                                        <option value="">Seleccione un producto</option>
+                                        {% for producto in productos %}
+                                        <option value="{{ producto[0] }}" 
+                                                {% if productos_seleccionados['producto_id_' ~ i] == producto[0] %}selected{% endif %}
+                                                data-precio="{{ producto[2] }}">
+                                            {{ producto[1] }} (S/.{{ "%.2f"|format(producto[2]) }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="hidden" name="precio_{{ i }}" id="precio_hidden_{{ i }}" 
+                                           value="{% if i <= items|length %}{{ items[i-1][4] }}{% else %}0{% endif %}">
+                                </td>
+                                <td>
+                                    <input type="number" name="cantidad_{{ i }}" id="cantidad_{{ i }}" 
+                                           class="form-control cantidad-input" min="1" step="1"
+                                           value="{{ cantidades_seleccionadas['cantidad_' ~ i] if cantidades_seleccionadas['cantidad_' ~ i] else '' }}"
+                                           {% if not productos_seleccionados['producto_id_' ~ i] %}disabled{% endif %}>
+                                </td>
+                                <td class="text-right">
+                                    <span id="precio_{{ i }}" class="precio">
+                                        {% if i <= items|length %}{{ "%.2f"|format(items[i-1][4]) }}{% else %}0.00{% endif %}
+                                    </span>
+                                </td>
+                                <td class="text-right">
+                                    <span id="subtotal_{{ i }}" class="subtotal">
+                                        {% if i <= items|length %}{{ "%.2f"|format(items[i-1][5]) }}{% else %}0.00{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger btn-remove-item" {% if not productos_seleccionados['producto_id_' ~ i] %}disabled{% endif %}>
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Resumen</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 offset-md-6">
+                        <div class="form-group row">
+                            <label class="col-sm-6 col-form-label font-weight-bold">Total:</label>
+                            <div class="col-sm-6 text-right">
+                                <span id="total" class="h4">S/. {{ "%.2f"|format(factura[2]) }}</span>
+                                <input type="hidden" name="total" id="total-hidden" value="{{ factura[2] }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group text-right">
+            <a href="{{ url_for('ver_factura', id=factura[0]) }}" class="btn btn-secondary mr-2">
+                <i class="fas fa-times"></i> Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Guardar Factura
+            </button>
+        </div>
+    </form>
+</div>
 
 <script>
-    document.querySelectorAll('.producto-select').forEach(select => {
-        select.addEventListener('change', function() {
-            const precio = this.options[this.selectedIndex]?.dataset.precio || '0';
-            const rowId = this.id.split('_')[2];
-            document.getElementById(`precio_${rowId}`).textContent = parseFloat(precio).toFixed(2);
+document.addEventListener('DOMContentLoaded', function() {
+    // Habilitar/deshabilitar campos según selección de producto
+    function updateRowState(rowId) {
+        const productoSelect = document.getElementById(`producto_id_${rowId}`);
+        const cantidadInput = document.getElementById(`cantidad_${rowId}`);
+        const removeBtn = document.querySelector(`#items-table tr:nth-child(${rowId}) .btn-remove-item`);
+        
+        if (productoSelect.value) {
+            cantidadInput.disabled = false;
+            if (removeBtn) removeBtn.disabled = false;
             calcularSubtotal(rowId);
-        });
-    });
-    
-    document.querySelectorAll('.cantidad-input').forEach(input => {
-        input.addEventListener('input', function() {
-            const rowId = this.id.split('_')[1];
-            calcularSubtotal(rowId);
-        });
-    });
-    
+        } else {
+            cantidadInput.disabled = true;
+            cantidadInput.value = '';
+            document.getElementById(`precio_${rowId}`).textContent = '0.00';
+            document.getElementById(`precio_hidden_${rowId}`).value = '0';
+            document.getElementById(`subtotal_${rowId}`).textContent = '0.00';
+            if (removeBtn) removeBtn.disabled = true;
+            calcularTotal();
+        }
+    }
+
+    // Calcular subtotal para una fila
     function calcularSubtotal(rowId) {
         const cantidad = parseFloat(document.getElementById(`cantidad_${rowId}`).value) || 0;
-        const precio = parseFloat(document.getElementById(`precio_${rowId}`).textContent) || 0;
+        const precio = parseFloat(document.getElementById(`precio_hidden_${rowId}`).value) || 0;
         const subtotal = cantidad * precio;
         document.getElementById(`subtotal_${rowId}`).textContent = subtotal.toFixed(2);
         calcularTotal();
     }
-    
+
+    // Calcular el total general
     function calcularTotal() {
         let total = 0;
         document.querySelectorAll('.subtotal').forEach(el => {
             total += parseFloat(el.textContent) || 0;
         });
-        document.getElementById('total').textContent = total.toFixed(2);
+        document.getElementById('total').textContent = 'S/. ' + total.toFixed(2);
+        document.getElementById('total-hidden').value = total.toFixed(2);
     }
+
+    // Event listeners para los selects de productos
+    document.querySelectorAll('.producto-select').forEach(select => {
+        const rowId = select.id.split('_')[2];
+        
+        select.addEventListener('change', function() {
+            const precio = this.options[this.selectedIndex]?.dataset.precio || '0';
+            document.getElementById(`precio_hidden_${rowId}`).value = precio;
+            document.getElementById(`precio_${rowId}`).textContent = parseFloat(precio).toFixed(2);
+            updateRowState(rowId);
+        });
+        
+        // Inicializar estado de la fila
+        updateRowState(rowId);
+    });
+
+    // Event listeners para los inputs de cantidad
+    document.querySelectorAll('.cantidad-input').forEach(input => {
+        const rowId = input.id.split('_')[1];
+        input.addEventListener('input', function() {
+            calcularSubtotal(rowId);
+        });
+    });
+
+    // Event listener para botones de eliminar
+    document.querySelectorAll('.btn-remove-item').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const row = this.closest('tr');
+            const rowId = row.rowIndex;
+            
+            // Resetear valores de la fila
+            document.getElementById(`producto_id_${rowId}`).value = '';
+            document.getElementById(`cantidad_${rowId}`).value = '';
+            updateRowState(rowId);
+        });
+    });
+});
 </script>
+
+<style>
+    .card-header {
+        font-weight: bold;
+    }
+    .table th {
+        white-space: nowrap;
+    }
+    .text-right {
+        text-align: right;
+    }
+    .item-row:hover {
+        background-color: #f8f9fa;
+    }
+    .btn-remove-item {
+        opacity: 0.7;
+    }
+    .btn-remove-item:hover {
+        opacity: 1;
+    }
+</style>
+
 {% endblock %}

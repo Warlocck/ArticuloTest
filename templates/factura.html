@@ -2,26 +2,69 @@
 
 {% block content %}
 <h2>Lista de Facturas</h2>
-<form method="POST" class="search-form">
-    <div class="form-group">
-        <label for="criterio">Buscar por:</label>
-        <select name="criterio" id="criterio" required>
-            <option value="numero">Número de Factura</option>
-            <option value="fecha">Fecha</option>
-            <option value="cliente">Cliente</option>
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="valor">Valor:</label>
-        <input type="text" id="valor" name="valor" required />
-    </div>
-    <button type="submit" class="btn">Buscar</button>
-</form>
 
-<div class="new-invoice-button">
+<!-- Botones de acción -->
+<div style="margin-bottom: 20px;">
     <a href="{{ url_for('nueva_factura') }}" class="btn">Nueva Factura</a>
+    <a href="{{ url_for('registrar_cliente') }}" class="btn">Registrar cliente</a>
+    <a href="{{ url_for('registrar_producto') }}" class="btn">Registrar producto</a>
+    <a href="{{ url_for('actualizar_stock') }}" class="btn">Actualizar Stock</a>
 </div>
 
+<!-- Formulario de búsqueda avanzada -->
+<form method="POST" action="{{ url_for('listar_facturas') }}" onsubmit="return validarBusqueda()" style="margin-bottom: 30px; border: 1px solid #ccc; padding: 15px; border-radius: 5px;">
+    <h3>Búsqueda Avanzada</h3>
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div>
+            <label for="numero">Número de Factura (4 dígitos):</label><br>
+            <input type="text" name="numero" id="numero" maxlength="4" pattern="^\d{4}$" placeholder="Ej: 1001">
+        </div>
+        <div>
+            <label for="cliente">Cliente:</label><br>
+            <input type="text" name="cliente" id="cliente" pattern="^[A-Za-zÑñÁÉÍÓÚáéíóú\s]+$" placeholder="Nombre del cliente">
+        </div>
+        <div>
+            <label for="fecha">Fecha:</label><br>
+            <input type="date" name="fecha" id="fecha">
+        </div>
+    </div>
+    <br>
+    <button type="submit" class="btn">Buscar</button>
+    <button href="{{ url_for('listar_facturas') }}" class="btn">Ver Todas Las Facturas</button>
+</form>
+
+<script>
+function validarBusqueda() {
+    const numero = document.getElementById('numero').value.trim();
+    const cliente = document.getElementById('cliente').value.trim();
+
+    if (numero && !/^\d{4}$/.test(numero)) {
+        alert("El número de factura debe contener exactamente 4 dígitos numéricos.");
+        return false;
+    }
+
+    if (cliente && !/^[A-Za-zÑñÁÉÍÓÚáéíóú\s]+$/.test(cliente)) {
+        alert("El nombre del cliente solo puede contener letras y espacios.");
+        return false;
+    }
+
+    return true;
+}
+</script>
+
+<!-- Mensajes flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                <button class="close" onclick="this.parentElement.remove()">&times;</button>
+                <p>{{ message }}</p>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- Tabla de facturas -->
 <table>
     <thead>
         <tr>
@@ -41,20 +84,12 @@
             <td>S/.{{ "%.2f"|format(factura[4]) }}</td>
             <td>
                 <a href="{{ url_for('ver_factura', id=factura[0]) }}" class="btn">Ver</a>
-                <a href="{{ url_for('editar_factura', id=factura[0]) }}" class="btn">Editar</a>
-                <a href="{{ url_for('exportar_factura_pdf', id=factura[0]) }}" class="btn">Exportar PDF</a>
+                <a href="{{ url_for('borrar_factura', id=factura[0]) }}" class="btn borrar">Borrar</a>
+                <a href="{{ url_for('editar_factura', id=factura[0]) }}" class="btn editar">Editar</a>
+                <a href="{{ url_for('exportar_factura_pdf', id=factura[0]) }}" class="btn descargar" target="_blank">Exportar PDF</a>
             </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-
-<style>
-    .search-form {
-        margin-bottom: 20px;
-    }
-    .new-invoice-button {
-        margin-bottom: 20px;
-    }
-</style>
 {% endblock %}

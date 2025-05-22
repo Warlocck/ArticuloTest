@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Actualizar Stock de Productos</h2>
+
+<!-- Mostrar mensajes flash -->
+<div class="auth-form">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+          <button class="close" onclick="this.parentElement.remove()">&times;</button>
+          <p>{{ message }}</p>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+</div>
+
+<!-- Botón para volver -->
+<a href="{{ url_for('listar_facturas') }}" class="btn">← Volver al Listado</a>
+
+<!-- Formulario para actualizar stock -->
+<form method="POST" style="margin-top: 20px;">
+    <table>
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Stock Actual</th>
+                <th>Nuevo Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+            <tr>
+                <td>{{ producto[1] }}</td>
+                <td>{{ producto[2] }}</td>
+                <td>
+                    <input type="number" name="stock_{{ producto[0] }}" value="{{ producto[2] }}" min="0" required>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <button type="submit" class="btn">Guardar Cambios</button>
+</form>
+{% endblock %}

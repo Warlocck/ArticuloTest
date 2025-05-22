@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="auth-container">
+        <h2>Registrar Nuevo Cliente</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <button class="close" onclick="this.parentElement.remove()">&times;</button>
+                        <p>{{ message }}</p>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form action="{{ url_for('registrar_cliente') }}" method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="ruc">RUC:</label>
+                <input type="text" id="ruc" name="ruc" required placeholder="Número de RUC" pattern="\d{11}" title="El RUC debe tener 11 dígitos" maxlength="11" >
+            </div>
+            <div class="form-group">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" required placeholder="Nombre completo">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required placeholder="correo@ejemplo.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="telefono">Teléfono:</label>
+                <input type="text" id="telefono" name="telefono" placeholder="Número de teléfono" pattern="\d{9}" title="El teléfono debe tener 9 dígitos" maxlength="9" minlength="9">
+            </div>
+            
+            <div class="form-group">
+                <label for="direccion">Dirección:</label>
+                <input type="text" id="direccion" name="direccion" required placeholder="Dirección completa">
+            </div>
+            
+            <button type="submit" class="btn">Registrar Cliente</button>
+        </form>
+        
+        <div class="auth-message">
+            <a href="{{ url_for('listar_facturas') }}">← Volver al listado de facturas</a>
+        </div>
+    </div>
+{% endblock %}
+

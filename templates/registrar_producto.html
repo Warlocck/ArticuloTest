@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="auth-container">
+    <h2>Registrar Nuevo Producto</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    <button class="close" onclick="this.parentElement.remove()">&times;</button>
+                    <p>{{ message }}</p>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <form action="{{ url_for('registrar_producto') }}" method="POST" class="auth-form">
+        <div class="form-group">
+            <label for="nombre">Nombre:</label>
+            <input type="text" id="nombre" name="nombre" required 
+                   placeholder="Nombre del producto" maxlength="100">
+        </div>
+        
+        <div class="form-group">
+            <label for="descripcion">Descripción:</label>
+            <textarea id="descripcion" name="descripcion" 
+                      placeholder="Descripción detallada del producto" rows="3"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="precio">Precio (S/):</label>
+            <input type="number" id="precio" name="precio" required 
+                   step="0.01" min="0.01" max="999999.99"
+                   placeholder="0.00">
+        </div>
+        
+        <div class="form-group">
+            <label for="stock">Stock Inicial:</label>
+            <input type="number" id="stock" name="stock" 
+                   min="0" placeholder="0">
+        </div>
+        
+        <button type="submit" class="btn">Registrar Producto</button>
+    </form>
+    
+    <div class="auth-message">
+        <a href="{{ url_for('listar_facturas') }}">← Volver al listado de facturas</a>
+    </div>
+</div>
+{% endblock %}

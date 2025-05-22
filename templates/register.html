@@ -10,10 +10,19 @@
   <div class="auth-container">
     <h2>Registro</h2>
     <form action="{{ url_for('register') }}" method="POST" class="auth-form">
-
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">
+                      <button class="close" onclick="this.parentElement.remove()">&times;</button>
+                      <p>{{ message }}</p>
+                  </div>
+              {% endfor %}
+          {% endif %}
+        {% endwith %}
       <div class="form-group">
         <label for="nombre">Nombre de usuario:</label>
-        <input type="text" id="nombre" name="nombre" required />
+        <input type="text" id="nombre" name="nombre" required pattern="[A-Za-z0-9_]{1,}"/>
       </div>
     
       <div class="form-group">
@@ -23,7 +32,7 @@
     
       <div class="form-group">
         <label for="password">Contraseña:</label>
-        <input type="password" id="password" name="password" required />
+        <input type="password" id="password" name="password" required pattern="[A-Za-z0-9_@].{8,}"/>
       </div>
     
       <div class="form-group">
