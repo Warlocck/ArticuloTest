@@ -154,6 +154,7 @@ def create_tables():
         $$;
         """,
         """
+        
         CREATE OR REPLACE FUNCTION obtener_factura_por_id(p_id INT)
         RETURNS TABLE(
             id INT,
@@ -163,16 +164,19 @@ def create_tables():
             cliente_id INT,
             cliente_nombre TEXT,
             cliente_direccion TEXT,
-            cliente_telefono TEXT
+            cliente_telefono TEXT,
+            cliente_ruc TEXT,
+            cliente_email TEXT
         )
         LANGUAGE sql
         AS $$
             SELECT f.id, f.numero, f.fecha, f.total,
-                c.id, c.nombre, c.direccion, c.telefono
+                c.id, c.nombre, c.direccion, c.telefono, c.ruc, c.email
             FROM facturas f
             JOIN clientes c ON f.cliente_id = c.id
             WHERE f.id = p_id;
         $$;
+
         """,
         """
         CREATE OR REPLACE FUNCTION obtener_items_factura(p_factura_id INT)
@@ -389,6 +393,7 @@ def create_tables():
             END;
             $$;
         """
+        
     )
     
     conn = None

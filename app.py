@@ -10,6 +10,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from io import BytesIO
 import json
+import re
 
 app = Flask(__name__)
 app.secret_key = os.environ["FLASK_SECRET_KEY"]
@@ -224,7 +225,7 @@ def nueva_factura():
         total = 0
 
         # CAMBIO 8 
-        # 🛡️ Validación: verificar si el cliente existe
+        # Validación: verificar si el cliente existe
         try:
             conn = get_db_connection()
             cur = conn.cursor()
@@ -564,13 +565,32 @@ def registrar_producto():
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        nombre = request.form.get('nombre').upper()
-        descripcion = request.form.get('descripcion').upper()
+        nombre = request.form.get('nombre')
+        descripcion = request.form.get('descripcion')
         precio = request.form.get('precio')
         stock = request.form.get('stock')
 
-        if not nombre or not descripcion or not precio or not stock:
-            flash("Todos los campos son obligatorios.", "error")
+        # Validar campos obligatorios
+        if not nombre.strip() or not descripcion.strip() or not precio.strip() or not stock.strip():
+            flash("Todos los campos son obligatorios y no pueden estar vacíos.", "error")
+            return redirect(url_for('registrar_producto'))
+
+        # Validar que nombre y descripción no contengan símbolos
+        pattern = r'^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$'
+        if not re.match(pattern, nombre):
+            flash("El nombre solo puede contener letras, números y espacios. No se permiten símbolos.", "error")
+            return redirect(url_for('registrar_producto'))
+
+        if not re.match(pattern, descripcion):
+            flash("La descripción solo puede contener letras, números y espacios. No se permiten símbolos.", "error")
+            return redirect(url_for('registrar_producto'))
+
+        # Validar tipos numéricos
+        try:
+            precio = float(precio)
+            stock = int(stock)
+        except ValueError:
+            flash("El precio debe ser numérico y el stock un número entero.", "error")
             return redirect(url_for('registrar_producto'))
 
         conn = get_db_connection()
@@ -601,7 +621,7 @@ def registrar_producto():
 def exportar_factura_pdf(id):
     if 'usuario' not in session:
         return redirect(url_for('login'))
-    
+
     conn = None
     cur = None
 
@@ -609,7 +629,7 @@ def exportar_factura_pdf(id):
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # Obtener los datos de la factura
+        # Obtener datos de la factura
         cur.execute('SELECT * FROM obtener_factura_por_id(%s);', (id,))
         factura = cur.fetchone()
 
@@ -617,7 +637,7 @@ def exportar_factura_pdf(id):
             flash('Factura no encontrada', 'danger')
             return redirect(url_for('listar_facturas'))
 
-        # Obtener los ítems de la factura
+        # Obtener ítems
         cur.execute('SELECT * FROM obtener_items_factura(%s);', (id,))
         items = cur.fetchall()
 
@@ -625,40 +645,49 @@ def exportar_factura_pdf(id):
         flash(f'Error al obtener datos de la factura: {str(e)}', 'danger')
         return redirect(url_for('listar_facturas'))
     finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-    
-    # Crear el PDF en memoria
+        if cur: cur.close()
+        if conn: conn.close()
+
+    # PDF
     pdf_buffer = BytesIO()
     doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
     elements = []
 
     styles = getSampleStyleSheet()
-    elements.append(Paragraph(f"Factura #{factura[1]}", styles['Title']))
+    title_style = styles['Title']
+    title_style.textColor = colors.HexColor("#2c3e50")
 
-    # Datos básicos de la factura
+    elements.append(Paragraph(f"<b>Factura #{factura[1]}</b>", title_style))
+
+    # Paleta personalizada
+    azul_oscuro = colors.HexColor("#2c3e50")
+    blanco = colors.white
+    gris_claro = colors.HexColor("#f4f4f4")
+
+    # Datos de factura
     factura_info = [
-        ["Fecha:", factura[2]],
+        ["Fecha:", str(factura[2])],
         ["Cliente:", factura[5]],
         ["Dirección:", factura[6]],
         ["Teléfono:", factura[7]],
+        ["RUC:", factura[8]],
+        ["Email:", factura[9]],
     ]
-    table_factura_info = Table(factura_info, hAlign='LEFT')
+
+    table_factura_info = Table(factura_info, hAlign='LEFT', colWidths=[100, 300])
     table_factura_info.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('BACKGROUND', (0, 0), (-1, 0), azul_oscuro),
+        ('TEXTCOLOR', (0, 0), (-1, 0), blanco),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, 1), (-1, -1), gris_claro),
+        ('GRID', (0, 0), (-1, -1), 0.5, azul_oscuro),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
     elements.append(table_factura_info)
     elements.append(Paragraph("<br/><br/>", styles['Normal']))
 
-    # Lista de ítems de la factura
+    # Ítems
     items_data = [["Producto", "Cantidad", "Precio Unitario", "Subtotal"]]
     for item in items:
         items_data.append([
@@ -670,32 +699,30 @@ def exportar_factura_pdf(id):
 
     table_items = Table(items_data, colWidths=[doc.width / 4.0] * 4, hAlign='LEFT')
     table_items.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('BACKGROUND', (0, 0), (-1, 0), azul_oscuro),
+        ('TEXTCOLOR', (0, 0), (-1, 0), blanco),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('ALIGN', (0, 1), (-1, -1), 'CENTER'),
+        ('BACKGROUND', (0, 1), (-1, -1), colors.whitesmoke),
+        ('GRID', (0, 0), (-1, -1), 0.5, azul_oscuro),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
     ]))
     elements.append(table_items)
     elements.append(Paragraph("<br/><br/>", styles['Normal']))
 
-    # Total de la factura
-    total_data = [["Total:", f"S/.{factura[3]:.2f}"]]
+    # Total
+    total_data = [["", "", "Total:", f"S/.{factura[3]:.2f}"]]
     table_total = Table(total_data, colWidths=[doc.width / 4.0] * 4, hAlign='LEFT')
     table_total.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (2, 0), (3, 0), azul_oscuro),
+        ('TEXTCOLOR', (2, 0), (3, 0), blanco),
+        ('FONTNAME', (2, 0), (3, 0), 'Helvetica-Bold'),
+        ('ALIGN', (2, 0), (3, 0), 'RIGHT'),
+        ('GRID', (2, 0), (3, 0), 0.5, azul_oscuro),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
     ]))
     elements.append(table_total)
 
-    # Generar PDF y enviarlo como respuesta
     doc.build(elements)
     pdf_buffer.seek(0)
 
@@ -704,6 +731,7 @@ def exportar_factura_pdf(id):
     response.headers['Content-Disposition'] = f'attachment; filename=factura_{factura[1]}.pdf'
 
     return response
+
 
 @app.route('/productos/actualizar_stock', methods=['GET', 'POST'])
 def actualizar_stock():
