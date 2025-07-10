@@ -1,6 +1,8 @@
 import psycopg2
 from psycopg2 import sql
 import os
+from dotenv import load_dotenv
+load_dotenv() 
 
 # Configuración de la base de datos
 DB_CONFIG = {

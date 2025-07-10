@@ -9,6 +9,9 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph
 from io import BytesIO
+from dotenv import load_dotenv
+load_dotenv() 
+
 import json
 import re
 
