@@ -6,6 +6,7 @@ from selenium.webdriver.edge.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from dotenv import load_dotenv
+load_dotenv() 
 
 def test_login_lambdatest():
     load_dotenv()
