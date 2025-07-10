@@ -1,0 +1,35 @@
+name: Pruebas con LambdaTest
+
+on: [push, pull_request]
+
+jobs:
+  lambdatest:
+    runs-on: ubuntu-latest
+
+    env:
+      LT_USERNAME: ${{ secrets.LT_USERNAME }}
+      LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Instalar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: |
+          pip install -r requirements.txt || echo "No hay requirements.txt"
+          pip install selenium pytest pytest-html python-dotenv
+
+      - name: Ejecutar pruebas LambdaTest
+        run: |
+          pytest tests/test_login.py --html=report_lambdatest.html --self-contained-html
+
+      - name: Subir reporte
+        uses: actions/upload-artifact@v3
+        with:
+          name: ReporteLambdaTest
+          path: report_lambdatest.html

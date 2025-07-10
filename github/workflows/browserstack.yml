@@ -1,0 +1,40 @@
+name: Pruebas Login con BrowserStack
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-browserstack:
+    runs-on: ubuntu-latest
+
+    env:
+      BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+      BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v3
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-html python-dotenv selenium
+
+      - name: Ejecutar pruebas con BrowserStack
+        run: |
+          pytest tests/test_login.py --html=report.html --self-contained-html
+
+      - name: Subir reporte HTML como artefacto
+        uses: actions/upload-artifact@v3
+        with:
+          name: ReporteTestLogin
+          path: report.html

@@ -6,3 +6,7 @@ flask-wtf
 python-dotenv
 reportlab
 werkzeug
+selenium
+python-dotenv
+pytest
+pytest-html
